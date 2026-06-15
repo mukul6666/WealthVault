@@ -673,6 +673,30 @@ select.fi option{background:#fff}
 .mob-sheet-btn:last-child { border-bottom: none; }
 .mob-sheet-btn:active { background: var(--bg3); }
 
+
+/* ── MOBILE FULL-SCREEN ITEM FORM ─────────────────────────────────────── */
+.form-page{display:flex;flex-direction:column;min-height:calc(100vh - 52px);margin:-14px -12px -80px;background:var(--bg2)}
+.form-page-hdr{position:sticky;top:0;z-index:20;background:var(--sb);display:flex;align-items:center;gap:14px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.12)}
+.form-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;width:38px;height:38px;border-radius:9px;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.form-back:active{background:rgba(255,255,255,.22)}
+.form-page-title{color:#fff;font-size:16px;font-weight:600;font-family:'DM Sans',sans-serif}
+.form-page-body{flex:1;padding:14px;padding-bottom:100px}
+.form-sec{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.form-sec-hdr{display:flex;align-items:center;justify-content:space-between;width:100%;padding:15px 16px;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.form-sec-hdr:active{background:var(--bg3)}
+.form-sec-title{font-size:15px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.form-sec-meta{display:flex;align-items:center;gap:10px}
+.form-sec-count{font-size:12px;color:var(--text4)}
+.form-sec-chev{font-size:14px;color:var(--text3)}
+.form-sec-body{padding:4px 16px 16px}
+.form-page-ftr{position:fixed;bottom:0;left:0;right:0;z-index:25;background:#fff;border-top:1px solid var(--border);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px}
+.form-cancel{flex:1;padding:14px;background:var(--bg3);color:var(--text2);border:1px solid var(--border2);border-radius:10px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer}
+.form-save{flex:2;padding:14px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1a1a;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer}
+.form-save:active{opacity:.9}
+.form-delete-btn{width:100%;padding:13px;background:rgba(192,57,43,.06);color:var(--red);border:1px solid rgba(192,57,43,.25);border-radius:10px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:6px}
+/* Hide bottom nav while form page is open */
+.form-page ~ #mobile-nav,body:has(.form-page) #mobile-nav{display:none!important}
+
 </style>
 </head>
 <body>
@@ -1411,6 +1435,8 @@ function navigateTo(page){
   else if(page==='indmoney-import')mc.innerHTML=renderINDmoneyImport();
   else if(page==='mf-upload')mc.innerHTML=renderMFPage_Upload();
   else if(page==='rates')mc.innerHTML=renderRatesPage();
+  else if(page.startsWith('form-add-')){const catId=page.slice(9);const cat=vault.categories.find(c=>c.id===catId);if(cat){mc.innerHTML=renderItemFormPage(cat,null);_postFormRender(cat);}}
+  else if(page.startsWith('form-edit-')){const rest=page.slice(10);const cat=vault.categories.find(c=>rest.startsWith(c.id+'-'));if(cat){const itemId=rest.slice(cat.id.length+1);const item=(vault.data[cat.id]||[]).find(i=>i.id===itemId);if(item)mc.innerHTML=renderItemFormPage(cat,item);_postFormRender(cat);}}
   else if(page.startsWith('bal-')){const catId=page.slice(4);const cat=vault.categories.find(c=>c.id===catId);if(cat)mc.innerHTML=renderBalanceUpdate(cat);}
   else{const cat=vault.categories.find(c=>c.id===page);if(cat){
     if(cat.isMF)mc.innerHTML=renderMFPage(cat);
@@ -1420,6 +1446,12 @@ function navigateTo(page){
     else mc.innerHTML=renderCatPage(cat);
   }}
   const na=gid('notes-area');if(na){na.value=vault.notes||'';na.readOnly=!isAdmin;}
+  // Hide bottom nav on full-screen form pages so footer Save bar is unobstructed
+  const _mnav=document.getElementById('mobile-nav');
+  if(_mnav&&window.innerWidth<=768){
+    const isForm=page.startsWith('form-add-')||page.startsWith('form-edit-');
+    _mnav.style.display=isForm?'none':'flex';
+  }
 }
 
 // ── TOTALS ──
@@ -3228,10 +3260,14 @@ function readForm(fields, prefix){
 }
 
 // ── ADD / EDIT MODAL ───────────────────────────────────────────────────
+function _isMobileView(){return window.innerWidth<=768;}
+let _formReturnPage=null; // where to go back to after save/cancel
+
 function openAddModal(catId){
   const cat=vault.categories.find(c=>c.id===catId);
   if(!cat)return;
   _modalDraft={};
+  if(_isMobileView()){_formReturnPage=catId;navigateTo('form-add-'+catId);return;}
   _renderItemModal(cat, null);
 }
 
@@ -3241,7 +3277,157 @@ function openEditModal(catId, itemId){
   const item=(vault.data[catId]||[]).find(i=>i.id===itemId);
   if(!item)return;
   _modalDraft=Object.assign({},item);
+  if(_isMobileView()){_formReturnPage=catId;navigateTo('form-edit-'+catId+'-'+itemId);return;}
   _renderItemModal(cat, item);
+}
+
+// ── MOBILE FULL-SCREEN ITEM FORM ───────────────────────────────────────
+let _formOpenSections={basic:true,creds:false,mobile:false,docs:false};
+
+
+function _postFormRender(cat){
+  // Attach the same recalc listeners the modal uses, for special categories
+  if(cat&&cat.id==='stocks_us'){
+    setTimeout(()=>{['qty','avgCostUSD','currentPriceUSD','currentValueUSD','investmentCostUSD'].forEach(fid=>{const el=gid('mf-'+fid);if(el){el.addEventListener('input',()=>_recalcUSStock('mf'));el.addEventListener('change',()=>_recalcUSStock('mf'));}});_recalcUSStock('mf');},150);
+  }
+  if(cat&&cat.isCrypto){
+    setTimeout(()=>{['qty','costPriceUSD','currentPriceUSD'].forEach(fid=>{const el=gid('mf-'+fid);if(el){el.addEventListener('input',()=>_recalcCrypto('mf'));el.addEventListener('change',()=>_recalcCrypto('mf'));}});_recalcCrypto('mf');},150);
+  }
+  if(cat&&cat.isPreciousMetals){
+    setTimeout(()=>{['weightGms','purchasePricePerGm','currentMetalPrice'].forEach(fid=>{const el=gid('mf-'+fid);if(el){el.addEventListener('input',()=>_recalcPreciousMetals('mf'));el.addEventListener('change',()=>_recalcPreciousMetals('mf'));}});_recalcPreciousMetals('mf');const lockerSel=gid('mf-linkedLockerId');if(lockerSel){const lockers=vault.data['locker']||[];lockerSel.innerHTML='<option value="">— none (at home / other) —</option>'+lockers.map(l=>`<option value="${eA(l.id)}"${_modalDraft.linkedLockerId===l.id?' selected':''}>${esc(l.lockerName||l.id)} — ${esc(l.bankName||'')}</option>`).join('');}},150);
+  }
+}
+
+function renderItemFormPage(cat, item){
+  const isEdit=!!item;
+  const sections=getFieldSections(cat);
+  const secDefs=[
+    {id:'basic',label:'Details',icon:'📋',fields:sections.basic||[]},
+    {id:'creds',label:'Credentials',icon:'🔑',fields:sections.creds||[]},
+    {id:'mobile',label:'Mobile App',icon:'📱',fields:sections.mobile||[]},
+  ].filter(s=>s.fields.length>0);
+
+  // Portal auto-fill picker (shown inside Credentials section)
+  const portalOpts=(vault.data['portals']||[]).map(p=>`<option value="${eA(p.id)}"${_modalDraft._portalRef===p.id?' selected':''}>${esc(p.portalName||p.id)}</option>`).join('');
+  const portalPicker=portalOpts?`<div class="fgrp" style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+    <div class="flbl">Auto-fill from Portal</div>
+    <select class="fi" id="mf-portalRef" onchange="_autoFillFromPortal(this.value,'mf')">
+      <option value="">— select portal to auto-fill —</option>${portalOpts}
+    </select></div>`:'';
+
+  const secHtml=secDefs.map((s,idx)=>{
+    const open=_formOpenSections[s.id];
+    const formInner=buildForm(s.fields,_modalDraft,'mf');
+    const extra=s.id==='creds'?portalPicker:'';
+    const count=s.fields.length;
+    return`<div class="form-sec">
+      <button type="button" class="form-sec-hdr" onclick="_toggleFormSec('${s.id}')">
+        <span class="form-sec-title">${s.icon} ${esc(s.label)}</span>
+        <span class="form-sec-meta">${open?'':`<span class="form-sec-count">${count} field${count>1?'s':''}</span>`}<span class="form-sec-chev">${open?'▾':'▸'}</span></span>
+      </button>
+      <div class="form-sec-body" id="formsec-${s.id}" style="display:${open?'block':'none'}">${extra}${formInner}</div>
+    </div>`;
+  }).join('');
+
+  // Documents section
+  const existingDocs=(_modalDraft._docs||[]);
+  const docOpen=_formOpenSections.docs;
+  const docsInner=`<div style="margin-bottom:10px;font-size:12px;color:var(--text4)">Attach Google Drive links for statements or certificates.</div>
+    <div id="doc-list-form">${existingDocs.map((d,i)=>`<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+      <input class="fi" style="flex:1" type="text" value="${eA(d.label||'')}" placeholder="Label" oninput="_modalDraft._docs[${i}].label=this.value">
+      <input class="fi" style="flex:1.4" type="text" value="${eA(d.url||'')}" placeholder="Drive URL" oninput="_modalDraft._docs[${i}].url=this.value">
+      <button class="btn-sm" onclick="_modalDraft._docs.splice(${i},1);_reRenderFormDocs()" style="color:var(--red);border-color:var(--red);flex-shrink:0">✕</button>
+    </div>`).join('')}</div>
+    <button class="btn-sm" onclick="_addFormDoc()">+ Add Document Link</button>`;
+  const docsSec=`<div class="form-sec">
+    <button type="button" class="form-sec-hdr" onclick="_toggleFormSec('docs')">
+      <span class="form-sec-title">📎 Documents</span>
+      <span class="form-sec-meta">${docOpen?'':(existingDocs.length?`<span class="form-sec-count">${existingDocs.length}</span>`:'')}<span class="form-sec-chev">${docOpen?'▾':'▸'}</span></span>
+    </button>
+    <div class="form-sec-body" id="formsec-docs" style="display:${docOpen?'block':'none'}">${docsInner}</div>
+  </div>`;
+
+  return`<div class="form-page">
+    <div class="form-page-hdr">
+      <button class="form-back" onclick="_cancelItemForm('${cat.id}')" aria-label="Back">←</button>
+      <span class="form-page-title">${isEdit?'Edit':'Add'} ${esc(cat.name)}</span>
+    </div>
+    <div class="form-page-body">
+      ${secHtml}
+      ${docsSec}
+      ${isEdit?`<button class="form-delete-btn" onclick="_deleteFromForm('${cat.id}','${item.id}')">🗑 Delete this item</button>`:''}
+    </div>
+    <div class="form-page-ftr">
+      <button class="form-cancel" onclick="_cancelItemForm('${cat.id}')">Cancel</button>
+      <button class="form-save" onclick="_saveItemFromForm('${cat.id}','${item?item.id:''}')">${isEdit?'Save Changes':'Add Item'}</button>
+    </div>
+  </div>`;
+}
+
+function _toggleFormSec(secId){
+  _formOpenSections[secId]=!_formOpenSections[secId];
+  const body=gid('formsec-'+secId);
+  if(body){
+    const open=_formOpenSections[secId];
+    body.style.display=open?'block':'none';
+    // Update chevron
+    const hdr=body.previousElementSibling;
+    if(hdr){const chev=hdr.querySelector('.form-sec-chev');if(chev)chev.textContent=open?'▾':'▸';
+      const meta=hdr.querySelector('.form-sec-count');if(meta&&open)meta.style.display='none';}
+  }
+}
+
+function _addFormDoc(){
+  if(!_modalDraft._docs)_modalDraft._docs=[];
+  _modalDraft._docs.push({label:'',url:''});
+  _reRenderFormDocs();
+}
+function _reRenderFormDocs(){
+  const list=gid('doc-list-form');
+  if(!list)return;
+  list.innerHTML=(_modalDraft._docs||[]).map((d,i)=>`<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+    <input class="fi" style="flex:1" type="text" value="${eA(d.label||'')}" placeholder="Label" oninput="_modalDraft._docs[${i}].label=this.value">
+    <input class="fi" style="flex:1.4" type="text" value="${eA(d.url||'')}" placeholder="Drive URL" oninput="_modalDraft._docs[${i}].url=this.value">
+    <button class="btn-sm" onclick="_modalDraft._docs.splice(${i},1);_reRenderFormDocs()" style="color:var(--red);border-color:var(--red);flex-shrink:0">✕</button>
+  </div>`).join('');
+}
+
+function _saveItemFromForm(catId,itemId){
+  const cat=vault.categories.find(c=>c.id===catId);
+  if(!cat)return;
+  const allF=allFields(cat);
+  const data=readForm(allF,'mf');
+  data._docs=_modalDraft._docs||[];
+  data._portalRef=gid('mf-portalRef')?.value||_modalDraft._portalRef||'';
+  const missing=allF.filter(f=>f.req&&!data[f.id]);
+  if(missing.length){toast(`Required: ${missing.map(f=>f.label).join(', ')}`,true);return;}
+  if(!vault.data[catId])vault.data[catId]=[];
+  if(itemId){
+    const idx=vault.data[catId].findIndex(i=>i.id===itemId);
+    if(idx!==-1)vault.data[catId][idx]=Object.assign({},vault.data[catId][idx],data);
+  } else {
+    data.id='item_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+    vault.data[catId].push(data);
+    if(!vault.history[catId])vault.history[catId]={};
+  }
+  recordSnap();
+  _resetFormSections();
+  navigateTo(catId);
+  toast(itemId?'Item updated':'Item added');
+}
+
+function _cancelItemForm(catId){
+  _resetFormSections();
+  navigateTo(catId);
+}
+
+function _deleteFromForm(catId,itemId){
+  // Reuse the password-confirm delete, then return to category page
+  deleteItem(catId,itemId);
+}
+
+function _resetFormSections(){
+  _formOpenSections={basic:true,creds:false,mobile:false,docs:false};
 }
 
 function _renderItemModal(cat, item){
@@ -6065,8 +6251,7 @@ function _mobFAB(){
 // Only register SW on the real deployed domain, not on preview/local URLs
 if('serviceWorker' in navigator){
   const _host = location.hostname;
-  const _isReal = _host.includes('github.io') || _host.includes('netlify.app') || 
-                  (_host !== 'localhost' && !_host.includes('claudeusercontent'));
+  const _isReal = _host.includes('github.io') || _host.includes('netlify.app') || _host.includes('pages.dev');
   if(_isReal){
     window.addEventListener('load', ()=>{
       navigator.serviceWorker.register('sw.js')
