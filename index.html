@@ -655,6 +655,24 @@ select.fi option{background:#fff}
   .nw-val { font-size: 24px; }
 }
 
+
+@media (max-width: 768px) {
+  .hdr-desktop-only { display: none !important; }
+  #mob-menu-btn { display: block !important; }
+}
+@media (min-width: 769px) {
+  .hdr-mobile-only { display: none !important; }
+  #mob-menu-sheet { display: none !important; }
+}
+.mob-sheet-btn {
+  display: block; width: 100%; padding: 16px 24px;
+  background: none; border: none; text-align: left;
+  font-family: 'DM Sans', sans-serif; font-size: 16px;
+  color: var(--text); cursor: pointer; border-bottom: 1px solid var(--border);
+}
+.mob-sheet-btn:last-child { border-bottom: none; }
+.mob-sheet-btn:active { background: var(--bg3); }
+
 </style>
 </head>
 <body>
@@ -703,19 +721,33 @@ select.fi option{background:#fff}
     <div class="hdr-left">
       <div class="hdr-diamond"></div>
       <span class="hdr-title">Wealth Vault</span>
-      <span class="hdr-owner">· My Vault</span>
     </div>
     <div class="hdr-right">
-      
-      <button id="search-btn" onclick="openSearch()" style="display:none;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:3px;padding:6px 12px;color:#fff;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;display:none;align-items:center;gap:6px" title="Search (Ctrl+K)">
-        🔍 <span style="font-size:11px;opacity:.7">Ctrl+K</span>
-      </button>
-      <span class="hdr-user">Hello, <strong id="hdr-uname"></strong></span>
-      <button id="save-btn" style="display:none;padding:8px 18px;background:var(--gold);color:#1a1a1a;border:none;border-radius:3px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="saveVault()">⬇ Save & Export</button>
-      <button id="excel-btn" style="display:none;padding:8px 14px;background:#1d6f42;color:#fff;border:none;border-radius:3px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'" onclick="exportToExcel()">📊 Export Excel</button>
-      <button style="padding:8px 18px;background:#334155;color:#fff;border:none;border-radius:3px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='#334155'" onclick="doLogout()">Logout</button>
+      <!-- Desktop buttons -->
+      <button id="search-btn" onclick="openSearch()" class="hdr-desktop-only" style="display:none;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:3px;padding:6px 12px;color:#fff;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;align-items:center;gap:6px" title="Search (Ctrl+K)">🔍 <span style="font-size:11px;opacity:.7">Ctrl+K</span></button>
+      <span class="hdr-user hdr-desktop-only">Hello, <strong id="hdr-uname"></strong></span>
+      <button id="save-btn" class="hdr-desktop-only" style="display:none;padding:8px 14px;background:var(--gold);color:#1a1a1a;border:none;border-radius:3px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="saveVault()">⬇ Save</button>
+      <button id="excel-btn" class="hdr-desktop-only" style="display:none;padding:8px 14px;background:#1d6f42;color:#fff;border:none;border-radius:3px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="exportToExcel()">📊 Excel</button>
+      <button class="hdr-desktop-only" style="padding:8px 14px;background:#334155;color:#fff;border:none;border-radius:3px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="doLogout()">Logout</button>
+      <!-- Mobile: user initial + kebab -->
+      <span id="hdr-uname-mob" class="hdr-mobile-only" style="display:none;width:32px;height:32px;border-radius:50%;background:rgba(201,168,76,.2);color:var(--gold);font-weight:700;font-size:14px;align-items:center;justify-content:center"></span>
+      <button id="mob-menu-btn" class="hdr-mobile-only" onclick="_mobMenu()" style="display:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:7px 13px;color:#fff;font-size:20px;cursor:pointer;line-height:1">⋮</button>
     </div>
   </header>
+  <!-- Mobile bottom sheet menu -->
+  <div id="mob-menu-sheet" onclick="if(event.target===this)_closeMobMenu()" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(0,0,0,.4)">
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:8px 0 40px;box-shadow:0 -4px 32px rgba(0,0,0,.2)">
+      <div style="width:36px;height:4px;background:#ddd;border-radius:2px;margin:12px auto 16px"></div>
+      <button onclick="_closeMobMenu();openSearch()" class="mob-sheet-btn">🔍 &nbsp; Search</button>
+      <button onclick="_closeMobMenu();saveVault()" id="mob-save-btn" class="mob-sheet-btn" style="display:none">⬇ &nbsp; Save & Export</button>
+      <button onclick="_closeMobMenu();exportToExcel()" id="mob-excel-btn" class="mob-sheet-btn" style="display:none">📊 &nbsp; Export to Excel</button>
+      <button onclick="_closeMobMenu();navigateTo('trends')" class="mob-sheet-btn">📉 &nbsp; Trends</button>
+      <button onclick="_closeMobMenu();navigateTo('notes')" class="mob-sheet-btn">📝 &nbsp; Notes</button>
+      <button onclick="_closeMobMenu();navigateTo('users')" class="mob-sheet-btn">👥 &nbsp; Users & Profile</button>
+      <button onclick="_closeMobMenu();navigateTo('categories')" class="mob-sheet-btn">⚙ &nbsp; Categories</button>
+      <button onclick="_closeMobMenu();doLogout()" class="mob-sheet-btn" style="color:#c0392b;font-weight:600">🚪 &nbsp; Logout</button>
+    </div>
+  </div>
   <div class="app-body">
     <nav class="sidebar" id="sidebar"></nav>
     <main class="main-content" id="main-content"></main>
@@ -1103,12 +1135,20 @@ function doSetup(){
   try{localStorage.setItem('wv_data',_wr);localStorage.setItem('wv_ts',nowStr());}catch(e){}
   initApp();// Show prominent save reminder instead of alert
 const mc2=gid('main-content');
-if(mc2){mc2.innerHTML=`<div style="max-width:520px;margin:40px auto;text-align:center">
-  <div style="font-size:48px;margin-bottom:16px">✅</div>
-  <h2 style="font-family:'DM Sans',sans-serif;font-size:22px;font-weight:600;margin-bottom:8px;color:var(--text)">Vault Created!</h2>
-  <p style="color:var(--text3);font-size:14px;margin-bottom:24px;line-height:1.7">Your vault is ready. <strong>You must save the file now</strong> — refreshing this page without saving will lose everything.</p>
-  <button onclick="saveVault()" style="background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1a1a;border:none;padding:14px 36px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;letter-spacing:.06em;cursor:pointer;border-radius:2px;width:100%;margin-bottom:12px">⬇ SAVE &amp; DOWNLOAD NOW</button>
-  <p style="font-size:12px;color:var(--text4)">After downloading, upload to Google Drive. Always open the downloaded file — not this browser tab.</p>
+const _isMob=window.innerWidth<=768;
+if(mc2){mc2.innerHTML=`<div style="max-width:480px;margin:${_isMob?'24px auto':'40px auto'};padding:${_isMob?'0 4px':'0'};text-align:center">
+  <div style="font-size:52px;margin-bottom:14px">✅</div>
+  <h2 style="font-family:'DM Sans',sans-serif;font-size:${_isMob?'20px':'22px'};font-weight:700;margin-bottom:10px;color:var(--text)">Vault Created!</h2>
+  <p style="color:var(--text3);font-size:14px;margin-bottom:24px;line-height:1.75">Your vault is set up and ready. Your data is saved in this browser automatically.</p>
+  <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:10px;padding:16px;margin-bottom:20px;text-align:left">
+    <div style="font-size:12px;font-weight:700;color:var(--gold2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">💡 How your data is saved</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.8">
+      ✅ Auto-saved in browser storage after every change<br>
+      ${_isMob?'📲 Tap <strong>⋮ menu → Save & Export</strong> anytime to download a backup':'💾 Use <strong>Save & Export</strong> in the top bar for a backup file'}
+    </div>
+  </div>
+  <button onclick="navigateTo('dashboard')" style="background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1a1a;border:none;padding:${_isMob?'16px':'14px 36px'};font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;letter-spacing:.04em;cursor:pointer;border-radius:10px;width:100%;margin-bottom:10px">Go to Dashboard →</button>
+  <button onclick="saveVault()" style="background:transparent;color:var(--text3);border:1px solid var(--border2);padding:${_isMob?'14px':'12px 36px'};font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border-radius:10px;width:100%">⬇ Download Backup File</button>
 </div>`;}
 }
 
@@ -1233,7 +1273,8 @@ function initApp(){gid('hdr-uname').textContent=(()=>{
     return local.split(/[._]/).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
   }
   return n||id;
-})();gid('save-btn').style.display=isAdmin?'inline-block':'none';const _eb=gid('excel-btn');if(_eb)_eb.style.display=isAdmin?'inline-block':'none';const _sb2=gid('search-btn');if(_sb2)_sb2.style.display=isAdmin?'flex':'none';renderSidebar();navigateTo('dashboard');showScr('app-screen');}
+})();gid('save-btn').style.display=isAdmin?'inline-block':'none';const _eb=gid('excel-btn');if(_eb)_eb.style.display=isAdmin?'inline-block':'none';const _sb2=gid('search-btn');if(_sb2)_sb2.style.display=isAdmin?'flex':'none';const _mb=gid('mob-menu-btn');if(_mb)_mb.style.display='block';
+  const _mu=gid('hdr-uname-mob');if(_mu){const _n=gid('hdr-uname').textContent||'?';_mu.textContent=_n.charAt(0).toUpperCase();_mu.style.display='flex';}renderSidebar();navigateTo('dashboard');showScr('app-screen');}
 </script>
   <!-- Platform abstractions (swapped at build time) -->
   <script>
@@ -5973,6 +6014,27 @@ function recordSnap(quick){
 }
 
 function toast(msg,err){const t=gid('toast');t.textContent=(err?'⚠ ':'✓ ')+msg;t.className='toast show'+(err?' etst':'');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3500);}
+
+
+// ── MOBILE MENU ────────────────────────────────────────────────────────
+function _mobMenu(){
+  const sheet=document.getElementById('mob-menu-sheet');
+  if(sheet){
+    // Sync save/excel button visibility
+    const sv=document.getElementById('save-btn');
+    const mobSv=document.getElementById('mob-save-btn');
+    const ex=document.getElementById('excel-btn');
+    const mobEx=document.getElementById('mob-excel-btn');
+    if(mobSv&&sv)mobSv.style.display=sv.style.display==='none'?'none':'block';
+    if(mobEx&&ex)mobEx.style.display=ex.style.display==='none'?'none':'block';
+    sheet.style.display='flex';
+    sheet.style.alignItems='flex-end';
+  }
+}
+function _closeMobMenu(){
+  const sheet=document.getElementById('mob-menu-sheet');
+  if(sheet)sheet.style.display='none';
+}
 
 // ── MOBILE NAV ────────────────────────────────────────────────────────
 function _mNav(page, btnId){
