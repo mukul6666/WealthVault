@@ -552,8 +552,8 @@ select.fi option{background:#fff}
 /* ── MOBILE RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 768px) {
   /* Login */
-  .login-box { width: 100vw; min-height: 100vh; border-radius: 0; padding: 40px 24px; border-top: none; box-shadow: none; display: flex; flex-direction: column; justify-content: center; }
-  .setup-box { width: 100vw; min-height: 100vh; border-radius: 0; padding: 32px 20px; border-top: none; box-shadow: none; overflow-y: auto; }
+  .login-box { width: 100vw; min-height: 100vh; border-radius: 0; padding: 40px 24px 48px; border-top: none; box-shadow: none; display: flex; flex-direction: column; justify-content: center; }
+  .setup-box { width: 100vw; min-height: 100vh; border-radius: 0; padding: 32px 20px 48px; border-top: none; box-shadow: none; overflow-y: auto; }
 
   /* App header */
   .app-header { padding: 0 14px; height: 52px; }
@@ -568,15 +568,17 @@ select.fi option{background:#fff}
   .app-body { flex-direction: column; min-height: calc(100vh - 52px); }
   .main-content { padding: 14px 12px 80px; max-width: 100%; }
 
-  /* Bottom nav bar */
+  /* Bottom nav bar — only visible inside app screen */
   #mobile-nav {
-    display: flex !important;
+    display: none;
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
     background: #fff; border-top: 1px solid var(--border);
     height: 60px; align-items: center; justify-content: space-around;
     box-shadow: 0 -2px 12px rgba(0,0,0,.08);
     padding-bottom: env(safe-area-inset-bottom);
   }
+  #app-screen.active ~ #mobile-nav,
+  #app-screen.active + * #mobile-nav { display: flex; }
   .mob-nav-btn {
     display: flex; flex-direction: column; align-items: center; gap: 2px;
     padding: 6px 10px; cursor: pointer; flex: 1;
@@ -747,7 +749,7 @@ select.fi option{background:#fff}
 
 
 <!-- MOBILE BOTTOM NAV -->
-<nav id="mobile-nav" style="display:none">
+<nav id="mobile-nav" style="display:none" aria-hidden="true">
   <button class="mob-nav-btn active" id="mnav-home" onclick="_mNav('dashboard','mnav-home')">
     <span class="mob-nav-icon">⬡</span>Home
   </button>
@@ -1202,7 +1204,13 @@ function _doLogoutNow(){
   gid('l-uid').value='';gid('l-pass').value='';gid('l-err').textContent='';
   showScr('login-screen');
 }
-function showScr(s){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));gid(s).classList.add('active');}
+function showScr(s){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  gid(s).classList.add('active');
+  // Show bottom nav only inside the app
+  const nav=document.getElementById('mobile-nav');
+  if(nav)nav.style.display=(s==='app-screen')?'flex':'none';
+}
 
 window.onload=()=>{
   ['l-uid','l-pass'].forEach(x=>gid(x).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
