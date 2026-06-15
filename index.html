@@ -666,7 +666,7 @@ select.fi option{background:#fff}
     <div class="vault-header">
       <div class="vault-diamond"></div>
       <h1>Wealth Vault</h1>
-      <div class="vault-owner">Mukul's Private Record</div>
+      <div class="vault-owner">Your Private Wealth Record</div>
       <div class="vault-sub">Encrypted · Secure · Private</div>
     </div>
     <div class="fg"><label>Email ID</label><input type="email" id="l-uid" placeholder="your@email.com" autocomplete="off"></div>
@@ -687,7 +687,7 @@ select.fi option{background:#fff}
     <p>Create the master admin account to get started.</p>
     <div class="note-box">⚠ <strong>Critical:</strong> Your password is the only key. AES-256 encrypted — data cannot be recovered if lost. Store password safely.</div>
     <div class="form-row">
-      <div class="fg full-col"><label>Your Full Name <span style="color:var(--red)">*</span></label><input type="text" id="s-name" placeholder="e.g. Mukul Saxena" autocomplete="name"></div>
+      <div class="fg full-col"><label>Your Full Name <span style="color:var(--red)">*</span></label><input type="text" id="s-name" placeholder="e.g. Raj Sharma" autocomplete="name"></div>
       <div class="fg full-col"><label>Admin Email ID <span style="color:var(--red)">*</span></label><input type="email" id="s-uid" placeholder="your@email.com" autocomplete="email"></div>
       <div class="fg full-col"><label>Master Password <span style="color:var(--red)">*</span></label><input type="password" id="s-pass" placeholder="Min 8 characters" autocomplete="new-password"></div>
       <div class="fg full-col"><label>Confirm Password <span style="color:var(--red)">*</span></label><input type="password" id="s-pass2" placeholder="Repeat password" autocomplete="new-password"></div>
@@ -735,7 +735,7 @@ select.fi option{background:#fff}
 <div id="search-box" style="display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:680px;max-width:96vw;z-index:9999;background:#fff;border-radius:0 0 8px 8px;box-shadow:0 12px 48px rgba(0,0,0,.25);border:1px solid var(--border);border-top:3px solid var(--blue)">
   <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--border)">
     <span style="font-size:17px">🔍</span>
-    <input id="search-input" type="text" placeholder="Search anything — HDFC, Mukul, maturing, joint, fd:SBI..."
+    <input id="search-input" type="text" placeholder="Search anything — HDFC, maturing, joint, fd:SBI..."
       style="flex:1;border:none;outline:none;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:transparent"
       oninput="_doSearch(this.value)" onkeydown="_searchKeyNav(event)">
     <button onclick="closeSearch()" style="background:transparent;border:1px solid var(--border);border-radius:3px;padding:3px 8px;font-size:11px;color:var(--text4);cursor:pointer">Esc</button>
@@ -743,7 +743,7 @@ select.fi option{background:#fff}
   <div id="search-results" style="max-height:440px;overflow-y:auto"></div>
   <div style="padding:6px 18px;border-top:1px solid var(--border);font-size:10px;color:var(--text4);display:flex;gap:16px;background:var(--bg2)">
     <span>↑↓ navigate</span><span>Enter select</span><span>Esc close</span>
-    <span style="margin-left:auto;opacity:.7">fd:SBI · holder:Parul · maturing · joint</span>
+    <span style="margin-left:auto;opacity:.7">fd:SBI · holder:Name · maturing · joint</span>
   </div>
 </div>
 
@@ -1226,7 +1226,7 @@ window.addEventListener('beforeunload',()=>{
 function initApp(){gid('hdr-uname').textContent=(()=>{
   const n=(currentUser.name||'').trim();
   if(n&&!n.includes('@'))return n;
-  // Derive from email: mukul.saxena@gmail.com → Mukul Saxena
+  // Derive from email: john.doe@gmail.com → John Doe
   const id=currentUser.id||'';
   if(id.includes('@')){
     const local=id.split('@')[0];
@@ -1414,7 +1414,7 @@ function _resolveHolderKey(rawName, knownKeys){
   // Skip locker names
   const lockerNames=(vault.data['locker']||[]).map(l=>(l.lockerName||'').trim().toUpperCase());
   if(lockerNames.includes(n))return'(Unassigned)';
-  // Merge partial names: "Mukul" and "Mukul Saxena" → use the longer one
+  // Merge partial names: "Raj" and "Raj Sharma" → use the longer one
   for(const k of knownKeys){
     if(k==='(Unassigned)')continue;
     const kn=_normaliseHolderName(k);
@@ -1845,13 +1845,12 @@ function _parseECAS(lines){
     if(person&&!personMap[person]){
       // Map short eCAS holder names to full display names
       const _nameMap={
-        'mukul':    'Mukul Saxena',
-        'parul':    'Parul Saxena',
-        'sushma':   'Sushma Saxena',
-        'mummy':    'Sushma Saxena',
-        'papa':     'Sushma Saxena',
-        'mom':      'Sushma Saxena',
-        'mother':   'Sushma Saxena',
+        'mummy':    'Mother',
+        'papa':     'Father',
+        'mom':      'Mother',
+        'mother':   'Mother',
+        'dad':      'Father',
+        'father':   'Father',
       };
       const holderLower=(holder||person||'').trim().toLowerCase();
       personMap[person]=_nameMap[holderLower]
@@ -4418,7 +4417,7 @@ function _doSearch(q){
   if(!res)return;
   q=(q||'').trim();
 
-  // Parse prefix filters: "fd:SBI", "holder:Mukul", "bank:HDFC"
+  // Parse prefix filters: "fd:SBI", "holder:Name", "bank:HDFC"
   let catFilter='', holderFilter='', rawQ=q;
   const prefixMatch=q.match(/^(\w+):(.+)$/);
   if(prefixMatch){
@@ -4437,7 +4436,7 @@ function _doSearch(q){
   if(!q&&!isMaturing&&!isJoint){
     res.innerHTML=`<div style="padding:20px 18px;color:var(--text4);font-size:13px;text-align:center">
       Start typing to search across all your assets<br>
-      <span style="font-size:11px;margin-top:6px;display:block">Try: "HDFC" · "Mukul" · "maturing" · "joint" · "fd:SBI" · "holder:Parul"</span>
+      <span style="font-size:11px;margin-top:6px;display:block">Try: "HDFC" · "maturing" · "joint" · "fd:SBI" · "holder:Name"</span>
     </div>`;
     return;
   }
@@ -4859,7 +4858,7 @@ function _holderWidget(broker){
         </select>
         <input type="hidden" id="broker-holder-input" value="${saved}">`
       :`<div style="font-size:12px;color:var(--red);margin-bottom:8px">⚠ No names found in vault profile. Please type a name:</div>
-        <input class="fi" id="broker-holder-input" type="text" placeholder="e.g. Mukul Saxena" value="${saved}" style="width:240px;font-size:14px;font-weight:600">
+        <input class="fi" id="broker-holder-input" type="text" placeholder="e.g. Raj Sharma" value="${saved}" style="width:240px;font-size:14px;font-weight:600">
         <div style="font-size:11px;color:var(--text4);margin-top:4px">Tip: set your name in <a href="#" onclick="navigateTo('users')" style="color:var(--blue)">Users & Profile</a> to avoid this prompt.</div>`
     }
     <label style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;color:var(--text3);cursor:pointer">
@@ -6001,12 +6000,18 @@ function _mobFAB(){
 }
 
 // ── SERVICE WORKER REGISTRATION ────────────────────────────────────────
+// Only register SW on the real deployed domain, not on preview/local URLs
 if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('sw.js')
-      .then(r=>console.log('SW registered:', r.scope))
-      .catch(e=>console.log('SW failed:', e));
-  });
+  const _host = location.hostname;
+  const _isReal = _host.includes('github.io') || _host.includes('netlify.app') || 
+                  (_host !== 'localhost' && !_host.includes('claudeusercontent'));
+  if(_isReal){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('sw.js')
+        .then(r=>console.log('SW registered:', r.scope))
+        .catch(e=>console.warn('SW registration failed:', e.message));
+    });
+  }
 }
 
 // ── INSTALL PROMPT ─────────────────────────────────────────────────────
